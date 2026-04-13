@@ -3,6 +3,7 @@ package ConzyNestapp.com.CozyNest.Entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -12,21 +13,22 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
+@ToString
 @Table(name="Room")
 public class RoomEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "hotel_Id", nullable = false)
-    private HotelEntity hotelEntity;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hotel_Id", nullable = false)                //owning side
+    private HotelEntity hotelEntity;            //helps to find the room for given hotel
 
     @Column(nullable = false)
     private String type;
 
     @Column(nullable = false)
-    private BigDecimal basePrice;  //base_price numeric(38,2) not null,
+    private BigDecimal basePrice;  //base_price numeric(38,2) not null,--> by default 32 Integer and 2 Decimal value
 
     @CreationTimestamp
     private LocalDateTime createdDate;

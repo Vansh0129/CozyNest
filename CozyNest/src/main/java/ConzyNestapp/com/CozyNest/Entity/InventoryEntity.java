@@ -1,8 +1,7 @@
 package ConzyNestapp.com.CozyNest.Entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -20,7 +19,8 @@ import java.time.LocalDateTime;
         )
 
 )
-public class InventoryEntity {
+@AllArgsConstructor @NoArgsConstructor @Builder     //fixed annotation if need to use Builder
+public class InventoryEntity {              //useful such that in future if we need to check wheather we have rooms or not it will help ous
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -37,7 +37,7 @@ public class InventoryEntity {
     private LocalDate date;
 
     @Column(nullable = false,columnDefinition = "INTEGER DEFAULT 0")        //setting by default//like it is queary in hibernate (booked_count INTEGER DEFAULT 0 not null)
-    private Integer bookedCount;
+    private Integer bookedCount;           //like initially the count is zero so user can see full booking sloat available
 
     @Column(nullable = false)
     private Integer totalCount;
@@ -62,3 +62,4 @@ public class InventoryEntity {
     private Boolean  closed;
 
 }
+//Imp for availblity cheking if and only if the hotel is active

@@ -50,9 +50,6 @@ public class BookingEntity {
     @Column(nullable = false)
     private LocalDateTime checkOutDate;
 
-    @OneToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(nullable = false)         //Initially it should be nullable
-    private PaymentEntity paymentId;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name="booking_guest",                                //name of Combined table inside db

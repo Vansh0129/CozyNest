@@ -1,11 +1,13 @@
 package ConzyNestapp.com.CozyNest.Entity;
 
 import jakarta.persistence.Embeddable;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
 @Embeddable
 public class HotelContactInfo {
     String completeAddress;

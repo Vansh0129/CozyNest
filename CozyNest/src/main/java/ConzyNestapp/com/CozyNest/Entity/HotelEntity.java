@@ -8,7 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.List;
 
 @Entity
 @Getter
@@ -36,14 +36,16 @@ public class HotelEntity {                   //HotelEntity->(KababCase)->hotel_e
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    private boolean isActive=true;
+    private boolean active=false;
 
     @Embedded
     private HotelContactInfo contactInfo;
 
-    @OneToMany(mappedBy = "hotelEntity")
+    @OneToMany(mappedBy = "hotelEntity",cascade = CascadeType.DETACH)
     @ElementCollection(fetch = FetchType.LAZY)
-    private Set<RoomEntity> rooms;
+    private List<RoomEntity> rooms;
+
+    private String Owner;
 
 
 

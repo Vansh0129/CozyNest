@@ -8,6 +8,7 @@ class CozyNestApplicationTests {
 
 	@Test
 	void contextLoads() {
+
 	}
 
 }
