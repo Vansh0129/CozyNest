@@ -28,6 +28,10 @@ public class PaymentEntity {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @OneToOne(fetch = FetchType.LAZY)
+     //Initially it should be nullable
+    private BookingEntity booking;
+
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
