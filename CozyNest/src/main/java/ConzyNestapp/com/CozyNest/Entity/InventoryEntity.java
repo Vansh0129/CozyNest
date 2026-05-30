@@ -39,6 +39,9 @@ public class InventoryEntity {              //useful such that in future if we n
     @Column(nullable = false,columnDefinition = "INTEGER DEFAULT 0")        //setting by default//like it is queary in hibernate (booked_count INTEGER DEFAULT 0 not null)
     private Integer bookedCount;           //like initially the count is zero so user can see full booking sloat available
 
+    @Column(nullable = false,columnDefinition = "INTEGER DEFAULT 0")
+    private Integer reservedCount;
+
     @Column(nullable = false)
     private Integer totalCount;
 

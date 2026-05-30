@@ -2,22 +2,26 @@ package ConzyNestapp.com.CozyNest.Entity;
 
 import ConzyNestapp.com.CozyNest.Entity.Enums.BookingStatus;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
 @Getter
 @Setter
-@Table(name="Booking") //hibernate convert the Booking to booking
+@Builder
+@Table(name="Booking")
+@NoArgsConstructor
+@AllArgsConstructor //hibernate convert the Booking to booking
 public class BookingEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id")
+     private Long booking_id;
 
     @JoinColumn(nullable = false,name="hotel_Id")
     @ManyToOne(fetch = FetchType.LAZY)
@@ -49,6 +53,9 @@ public class BookingEntity {
 
     @Column(nullable = false)
     private LocalDateTime checkOutDate;
+
+    @Column(nullable = false)
+    private BigDecimal price;
 
 
     @ManyToMany(fetch = FetchType.LAZY)

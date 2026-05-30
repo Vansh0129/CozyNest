@@ -26,6 +26,9 @@ public class GuestEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
+    private Long age;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
