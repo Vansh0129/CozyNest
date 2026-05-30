@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Setter
 @ToString
 @Table(name="Room")
-public class RoomEntity {
+public class RoomEntity {           //like room Category inner to that there is more same type of rooms under same Category
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
