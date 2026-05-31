@@ -56,6 +56,7 @@ public class InventoryEntity {              //useful such that in future if we n
 
     @Column(nullable = false,precision =10,scale=2)
     private BigDecimal price;       //baseprice*surgeFactor
+//    TODO :ADD base price of hotel and price differently such help in updating price and prevent from overLoaded error.
 
     @Column(nullable = false)
     private String city;
