@@ -2,6 +2,7 @@ package ConzyNestapp.com.CozyNest.Entity;
 
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
@@ -44,7 +45,7 @@ public class HotelEntity {                   //HotelEntity->(KababCase)->hotel_e
     @OneToMany(mappedBy = "hotelEntity",cascade = CascadeType.DETACH)
     @ElementCollection(fetch = FetchType.LAZY)
     private List<RoomEntity> rooms;
-
+    @NotNull
     private String Owner;
 
 
