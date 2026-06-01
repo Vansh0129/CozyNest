@@ -1,6 +1,7 @@
 package ConzyNestapp.com.CozyNest.Entity;
 
 import ConzyNestapp.com.CozyNest.Entity.Enums.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,18 +33,18 @@ public class UserEntity implements UserDetails {
 
     @Column(nullable = false,unique = true)
     private String email;
-
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
-
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> set=new HashSet<>();
         roles.forEach(role -> set.add(new SimpleGrantedAuthority("ROLE_"+role)));
         return set;
     }
-
+    @JsonIgnore
     @Override
     public String getUsername() {
         return email;

@@ -45,8 +45,10 @@ public class HotelEntity {                   //HotelEntity->(KababCase)->hotel_e
     @OneToMany(mappedBy = "hotelEntity",cascade = CascadeType.DETACH)
     @ElementCollection(fetch = FetchType.LAZY)
     private List<RoomEntity> rooms;
-    @NotNull
-    private String Owner;
+
+    private String owner;
+
+
 
 
 
