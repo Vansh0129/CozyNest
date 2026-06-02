@@ -10,9 +10,13 @@ import ConzyNestapp.com.CozyNest.Exception.ResourceNotFoundException;
 import ConzyNestapp.com.CozyNest.Repository.*;
 import ConzyNestapp.com.CozyNest.Service.BookingService;
 import ConzyNestapp.com.CozyNest.Exception.UnAuthorisedException;
-import ConzyNestapp.com.CozyNest.strategy.PricingService;
+import ConzyNestapp.com.CozyNest.Service.PaymentService;
 import lombok.RequiredArgsConstructor;
+
+
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,17 +29,25 @@ import java.util.List;
 import java.util.Set;
 
 @RequiredArgsConstructor
+@Slf4j
 @Service
 public class BookingServiceImpl implements BookingService {
 
+    private final PaymentService paymentService;
     private final  BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
     private final InventoryRepository inventoryRepository;
     private final HotelRepository hotelRepository;
     private final GuestRepository guestRepository;
     private final ModelMapper modelMapper;
-    private final PricingService pricingService;
-    private final Integer PAGE_SIZE=5;
+
+
+    @Value("${stripe.successEvent.url}")
+    private String onSuccessUrl;
+
+    @Value("${stripe.failEvent.url}")
+    private String onFailUrl;
+
 
     @Override
     @Transactional
@@ -60,7 +72,7 @@ public class BookingServiceImpl implements BookingService {
         BigDecimal price=BigDecimal.ZERO;
         for(InventoryEntity inventoryEntity:inventoryList){
             inventoryEntity.setReservedCount((int) (inventoryEntity.getReservedCount()+bookingRequest.getRoomCount()));
-            price.add(inventoryEntity.getPrice());
+            price=price.add(inventoryEntity.getPrice());
         }
         inventoryRepository.saveAll(inventoryList); //updated the Inventory count!
 
@@ -83,7 +95,7 @@ public class BookingServiceImpl implements BookingService {
                 .checkOutDate(bookingRequest.getCheckOutDate().atTime(23,59))
                 .user_Id(user)
                 .room_Count(bookingRequest.getRoomCount())
-                .price(BigDecimal.TEN)
+                .price(price)
                 .build();
         bookingEntity=bookingRepository.save(bookingEntity);
         return modelMapper.map(bookingEntity,BookingDto.class);
@@ -103,8 +115,8 @@ public class BookingServiceImpl implements BookingService {
 
         if(!booking.getUser_Id().getName().equals(currentUser.getName()) || !booking.getUser_Id().getEmail().equals(currentUser.getEmail())) throw new UnAuthorisedException("Booking does not belong to this User !");
 
-    if(booking.getBookingStatus()!=BookingStatus.RESERVED) throw new IllegalArgumentException("Booking is not under RESERVED state ,cannot add guest !");
-        if(booking.getCheckOutDate().isBefore(LocalDateTime.now())) throw new IllegalArgumentException("Booking has already expired!");
+        if(booking.getBookingStatus()!=BookingStatus.RESERVED) throw new IllegalArgumentException("Booking is not under RESERVED state ,cannot add guest !");
+        if(isExpiredBooking(booking)) throw new IllegalArgumentException("Booking has already expired!");
         Set<GuestEntity> set=new HashSet<>();
         for(GuestDto guest:guestDtos){
             GuestEntity entity=modelMapper.map(guest, GuestEntity.class);
@@ -116,6 +128,32 @@ public class BookingServiceImpl implements BookingService {
         booking.setGuests(set);
         bookingRepository.save(booking);
         return modelMapper.map(booking,BookingDto.class);
+
+    }
+
+    @Override
+    @Transactional
+    public String paymentInit(Long booking_id) {
+        BookingEntity booking=bookingRepository.findById(booking_id).orElseThrow(()->new ResourceNotFoundException("Invalid Booking Id : "+booking_id));
+        UserEntity currentUser=(UserEntity)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if(!booking.getUser_Id().getEmail().equals(currentUser.getEmail())) throw new UnAuthorisedException("Booking does not belong to this User !");
+        if(booking.getBookingStatus()!=BookingStatus.RESERVED) throw new IllegalArgumentException("Booking is not under RESERVED state ,cannot add guest !");
+        if(isExpiredBooking(booking)) throw new IllegalArgumentException("Booking has already expired!");
+
+        //Validated  booking now need  to  CONFORM it
+        String stripePaymentSession=paymentService.
+                getCheckOutSession(booking,onSuccessUrl,onFailUrl);  //can append uri as per frontend so stripe use to redirect request!
+        //Act on this
+        booking.setBookingStatus(BookingStatus.PAYMENT);
+        bookingRepository.save(booking);
+
+        return stripePaymentSession;
+
+    }
+
+    private boolean isExpiredBooking(BookingEntity booking) {
+        return booking.getCreatedAt().plusMinutes(10).isBefore(LocalDateTime.now());        //booking creation time+10min>current time
 
     }
 }

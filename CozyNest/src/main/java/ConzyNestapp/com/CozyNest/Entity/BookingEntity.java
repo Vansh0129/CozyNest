@@ -66,5 +66,10 @@ public class BookingEntity {
     )
     private Set<GuestEntity> guests;
 
+    @Column(unique = true)
+    private String transactionId;
+
+
+
 
 }

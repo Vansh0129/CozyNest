@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RequestMapping("/booking")
 @RequiredArgsConstructor
@@ -25,6 +26,13 @@ public class HotelBookingController {           //booking related api's
     @PostMapping("/{bookingid}/Guest")
     public ResponseEntity<BookingDto> addGuest(@PathVariable Long bookingid, @RequestBody List<GuestDto> guestDtos){
         return ResponseEntity.ok( bookingService.addGuest(bookingid,guestDtos));
+
+    }
+
+    @PostMapping("/{bookingid}/payment")
+    public ResponseEntity<Map> paymentInit(@PathVariable Long bookingid){   //only need the booking id.,And response only get the session url
+        String SessionUrl=bookingService.paymentInit(bookingid);
+        return ResponseEntity.ok(Map.of("sessionUrl",SessionUrl) );
 
     }
 

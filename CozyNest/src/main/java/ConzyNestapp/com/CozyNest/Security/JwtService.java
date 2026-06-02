@@ -32,7 +32,7 @@ public class JwtService {
                 .claim("Gmail",user.getEmail())
                 .claim("Role",user.getRoles())     //Authorization part
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis()+1000*60*4))  //1000 millisecond=1sec,1sec*60=1 min
+                .expiration(new Date(System.currentTimeMillis()+1000*60*10))  //1000 millisecond=1sec,1sec*60=1 min
                 .signWith(getSecreteKey())                      // secrete sign
                 .compact();                         //now concat and build with all details
 
