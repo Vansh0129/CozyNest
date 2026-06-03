@@ -11,6 +11,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -22,6 +23,7 @@ import java.util.Set;
 
 public class BookingDto {
     private Long booking_id;
+    private BigDecimal price;
     @JsonIgnore
     private HotelEntity hotel;
     @JsonIgnore

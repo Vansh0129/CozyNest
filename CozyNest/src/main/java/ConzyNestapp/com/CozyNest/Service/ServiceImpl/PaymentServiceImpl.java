@@ -1,20 +1,24 @@
 package ConzyNestapp.com.CozyNest.Service.ServiceImpl;
 
 import ConzyNestapp.com.CozyNest.Entity.BookingEntity;
+import ConzyNestapp.com.CozyNest.Entity.Enums.BookingStatus;
 import ConzyNestapp.com.CozyNest.Entity.UserEntity;
 import ConzyNestapp.com.CozyNest.Repository.BookingRepository;
 import ConzyNestapp.com.CozyNest.Service.PaymentService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 
+import com.stripe.model.Event;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.InvoiceItemUpdateParams;
 import com.stripe.param.checkout.SessionCreateParams;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
@@ -90,6 +94,20 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (StripeException e) {
             log.error("Stripe session creation failed for booking ID: {}", booking.getBooking_id(), e);
             throw new RuntimeException("Stripe Payment Error !");
+        }
+    }
+
+    @Override
+    @Transactional
+    public void capturePayment(Event event) {
+        if("checkout.session.completed".equals(event.getType())){
+            Session session= (Session) event.getDataObjectDeserializer().getObject().orElse(null);
+            if(session==null ) return;
+            BookingEntity booking=bookingRepository.findBytransactionId(session.getId()).orElseThrow(()->  new BadCredentialsException("No transactional id !"));
+            booking.setBookingStatus(BookingStatus.CONFIRMED);
+            bookingRepository.save(booking);
+        }else {
+            log.warn("Unhandled event {}",event.getType());
         }
     }
 }
