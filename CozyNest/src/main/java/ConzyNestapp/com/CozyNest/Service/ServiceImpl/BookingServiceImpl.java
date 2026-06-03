@@ -11,6 +11,10 @@ import ConzyNestapp.com.CozyNest.Repository.*;
 import ConzyNestapp.com.CozyNest.Service.BookingService;
 import ConzyNestapp.com.CozyNest.Exception.UnAuthorisedException;
 import ConzyNestapp.com.CozyNest.Service.PaymentService;
+import com.stripe.exception.StripeException;
+import com.stripe.model.Refund;
+import com.stripe.model.checkout.Session;
+import com.stripe.param.RefundCreateParams;
 import lombok.RequiredArgsConstructor;
 
 
@@ -92,8 +96,8 @@ public class BookingServiceImpl implements BookingService {
                 .bookingStatus(BookingStatus.RESERVED)
                 .hotel(hotel)
                 .room_Id(room)
-                .checkInDate(bookingRequest.getCheckInDate().atStartOfDay())
-                .checkOutDate(bookingRequest.getCheckOutDate().atTime(23,59))
+                .checkInDate(bookingRequest.getCheckInDate())
+                .checkOutDate(bookingRequest.getCheckOutDate())
                 .user_Id(user)
                 .room_Count(bookingRequest.getRoomCount())
                 .price(price)
@@ -139,7 +143,7 @@ public class BookingServiceImpl implements BookingService {
         UserEntity currentUser=(UserEntity)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if(!booking.getUser_Id().getEmail().equals(currentUser.getEmail())) throw new UnAuthorisedException("Booking does not belong to this User !");
-        if(booking.getBookingStatus()!=BookingStatus.RESERVED) throw new IllegalArgumentException("Booking is not under RESERVED state ,cannot add guest !");
+        if(booking.getBookingStatus()!=BookingStatus.RESERVED) throw new IllegalArgumentException("Booking is not under RESERVED state ,cannot do Payment !");
         if(isExpiredBooking(booking)) throw new IllegalArgumentException("Booking has already expired!");
 
         //Validated  booking now need  to  CONFORM it
@@ -150,6 +154,39 @@ public class BookingServiceImpl implements BookingService {
         bookingRepository.save(booking);
 
         return stripePaymentSession;
+
+    }
+
+    @Override
+    @Transactional
+    public void paymentRefund(Long booking_id){
+        BookingEntity booking=bookingRepository.findById(booking_id).orElseThrow(()->new ResourceNotFoundException("Invalid Booking Id : "+booking_id));
+        UserEntity currentUser=(UserEntity)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if(!booking.getUser_Id().getEmail().equals(currentUser.getEmail())) throw new UnAuthorisedException("Booking does not belong to this User !");
+        if(booking.getBookingStatus()!=BookingStatus.CONFIRMED) throw new IllegalArgumentException("Booking is not under CONFIRMED state ,cannot hit refund !");
+
+        try {
+            Session session = Session.retrieve(booking.getTransactionId());
+            RefundCreateParams cancelParams = RefundCreateParams.builder()
+                    .setPaymentIntent(session.getPaymentIntent())
+                    .setAmount(session.getAmountTotal())
+                    .build();
+            Refund.create(cancelParams);        ///refunded by stripe.
+
+            booking.setBookingStatus(BookingStatus.REFUND);
+            bookingRepository.save(booking);
+            inventoryRepository.findAndLockReservedInventory(booking.getRoom_Id(),booking.getCheckInDate(),booking.getCheckOutDate(),booking.getRoom_Count());
+            inventoryRepository.refundBooking(booking.getRoom_Id(),booking.getCheckInDate(),booking.getCheckOutDate(),booking.getRoom_Count());
+
+        }
+        catch (StripeException stripeException){
+            log.warn("Stripe Exception accoured in Refund Payment Service");
+            throw  new RuntimeException(stripeException.getMessage());
+
+        }
+
+
 
     }
 

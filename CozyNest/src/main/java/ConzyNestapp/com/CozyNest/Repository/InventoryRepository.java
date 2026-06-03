@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -37,6 +38,7 @@ public interface InventoryRepository extends JpaRepository<InventoryEntity,Long>
             @Param(("dateCount")) Long days,
             Pageable pageable
     );
+    //    --Booking RESERVED ---- Query
 
     @Query("""
       SELECT i FROM InventoryEntity i
@@ -53,4 +55,53 @@ public interface InventoryRepository extends JpaRepository<InventoryEntity,Long>
             @Param("roomCount") long roomCount);
 
     List<InventoryEntity> findByHotelIdAndDateBetween(HotelEntity hotel, LocalDate startDate, LocalDate endDate);
+
+//    --Booking Conform ---- Query
+
+    @Modifying              /// cannot lock the table as Modifing Query
+    @Query("""
+      Update InventoryEntity i
+          Set i.reservedCount=i.reservedCount-:roomCount,
+              i.bookedCount=i.bookedCount+:roomCount
+      WHERE i.roomId=:roomId
+      AND i.date BETWEEN :startDate AND :endDate
+      AND i.closed=false
+      AND (i.totalCount-i.bookedCount-i.reservedCount>= :roomCount)
+      AND (i.reservedCount>=:roomCount)
+    """)
+    void ConfirmBooking(@Param("roomId") RoomEntity roomId,
+                        @Param("startDate") LocalDate startDate,
+                        @Param("endDate") LocalDate endDate,
+                        @Param("roomCount") long roomCount);
+
+
+
+    @Query("""
+      SELECT i FROM InventoryEntity i
+      WHERE i.roomId=:roomId
+      AND i.date BETWEEN :startDate AND :endDate
+      AND i.closed=false
+      AND i.totalCount-i.reservedCount>= :roomCount
+    """)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<InventoryEntity> findAndLockReservedInventory(        //gives the list of the  reserved inventory  for the given Booking date range must Lock before Edititng the DB
+                    @Param("roomId") RoomEntity roomId,
+                    @Param("startDate") LocalDate startDate,
+                    @Param("endDate") LocalDate endDate,
+                    @Param("roomCount") long roomCount
+    );
+
+    @Modifying              /// cannot lock the table as Modifing Query
+    @Query("""
+      Update InventoryEntity i
+          Set i.bookedCount=i.bookedCount-:roomCount
+      WHERE i.roomId=:roomId
+      AND i.date BETWEEN :startDate AND :endDate
+      AND i.closed=false
+      AND (i.totalCount-i.bookedCount>= :roomCount)
+    """)
+    void refundBooking(@Param("roomId") RoomEntity roomId,
+                       @Param("startDate") LocalDate startDate,
+                       @Param("endDate") LocalDate endDate,
+                       @Param("roomCount") long roomCount);
 }
