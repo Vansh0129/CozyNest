@@ -2,7 +2,6 @@ package ConzyNestapp.com.CozyNest.Entity;
 
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
@@ -20,7 +19,7 @@ public class HotelEntity {                   //HotelEntity->(KababCase)->hotel_e
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false,unique = true)
     private String name;
 
     @Column(nullable = false)
@@ -42,10 +41,10 @@ public class HotelEntity {                   //HotelEntity->(KababCase)->hotel_e
     @Embedded
     private HotelContactInfo contactInfo;
 
-    @OneToMany(mappedBy = "hotelEntity",cascade = CascadeType.DETACH)
+    @OneToMany(mappedBy = "hotelEntity",cascade = CascadeType.REMOVE)
     @ElementCollection(fetch = FetchType.LAZY)
     private List<RoomEntity> rooms;
-
+    @Column(nullable = false)
     private String owner;
 
 

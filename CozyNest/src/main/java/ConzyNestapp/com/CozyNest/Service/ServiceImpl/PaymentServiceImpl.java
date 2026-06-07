@@ -8,20 +8,19 @@ import ConzyNestapp.com.CozyNest.Repository.InventoryRepository;
 import ConzyNestapp.com.CozyNest.Service.PaymentService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
-
 import com.stripe.model.Event;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.CustomerCreateParams;
-import com.stripe.param.InvoiceItemUpdateParams;
 import com.stripe.param.checkout.SessionCreateParams;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+
+import static ConzyNestapp.com.CozyNest.Utils.AppUtils.getUser;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -35,7 +34,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public String getCheckOutSession(BookingEntity booking, String successUrl, String failureUrl) {
         // All Imports Must From Stripe Dependency
-        UserEntity user = (UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserEntity user=getUser();
 
 
         SessionCreateParams.LineItem.PriceData priceMemo=SessionCreateParams.LineItem.PriceData.builder()
@@ -101,8 +100,9 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional
     public void capturePayment(Event event) {
-        if("checkout.session.completed".equals(event.getType())){
+        if("checkout.session.completed".equals(event.getType()) ||"charge.succeeded".equals(event.getType())){
             log.info("booking came under the complete state");
 
             Session session= (Session) event.getDataObjectDeserializer().getObject().orElse(null);

@@ -16,12 +16,19 @@ public class GlobalResponseHandler implements ResponseBodyAdvice<Object> {
         return true;
     }
 
+
+
+//-------------------------SWAGGER UI -------------------------
     @Override
     public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType, Class<? extends HttpMessageConverter<?>> selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
-        if(body instanceof ApiResponse<?>) {
+        String path = request.getURI().getPath();
+        if (path.contains("/v3/api-docs") || path.contains("/swagger-ui")) {
             return body;
         }
 
+        if(body instanceof ApiResponse<?>){
+            return body;
+        }
         return new ApiResponse<>(body);
     }
 }

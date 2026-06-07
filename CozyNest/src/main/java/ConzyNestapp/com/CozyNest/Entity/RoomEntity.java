@@ -29,7 +29,7 @@ public class RoomEntity {           //like room Category inner to that there is 
 
     @Column(nullable = false)
     private BigDecimal basePrice;  //base_price numeric(38,2) not null,--> by default 32 Integer and 2 Decimal value
-
+            //this base price remain constant;
     @CreationTimestamp
     private LocalDateTime createdDate;
 

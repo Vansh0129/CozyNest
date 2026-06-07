@@ -1,5 +1,6 @@
 package ConzyNestapp.com.CozyNest.Entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.*;
 
@@ -10,8 +11,10 @@ import lombok.*;
 @Data
 @Embeddable
 public class HotelContactInfo {
+    @Column(unique = true)
     String completeAddress;
     String location;
     String email;
+    @Column(unique = true)
     String phoneNumber;
 }

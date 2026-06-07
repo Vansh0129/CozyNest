@@ -1,8 +1,7 @@
 package ConzyNestapp.com.CozyNest.Controller;
 
-import ConzyNestapp.com.CozyNest.Dto.HotelDto;
-import ConzyNestapp.com.CozyNest.Dto.Response.HotelInfo;
 import ConzyNestapp.com.CozyNest.Dto.Request.HotelSearchRequest;
+import ConzyNestapp.com.CozyNest.Dto.Response.HotelInfo;
 import ConzyNestapp.com.CozyNest.Dto.Response.HotelPricingDto;
 import ConzyNestapp.com.CozyNest.Service.HotelService;
 import ConzyNestapp.com.CozyNest.Service.InventoryService;
@@ -17,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/hotels")
 @RequiredArgsConstructor
-public class HotelBrowserController {
+public class HotelBrowserController {               //tested
     private final InventoryService inventoryService;
     private final HotelService hotelService;
 

@@ -16,4 +16,6 @@ public class UserDto {
     @Email(message = "Email cannot be null !")
     private String email;
 
+
+
 }

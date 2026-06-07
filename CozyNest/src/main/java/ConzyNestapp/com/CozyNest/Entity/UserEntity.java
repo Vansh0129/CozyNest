@@ -1,5 +1,6 @@
 package ConzyNestapp.com.CozyNest.Entity;
 
+import ConzyNestapp.com.CozyNest.Entity.Enums.Gender;
 import ConzyNestapp.com.CozyNest.Entity.Enums.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -9,6 +10,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -24,18 +26,27 @@ public class UserEntity implements UserDetails {
     private Long id;
 
     @Column(nullable = false)
+    private String  name;
+
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
+    @Column(nullable = true)
+    private LocalDate birthDate;
+
+    @Column(nullable = false,unique = true)
+    private String email;
+
+    @JsonIgnore
+    @Column(nullable = false)
+    private String password;
+
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     @ElementCollection(fetch = FetchType.EAGER)
     private List<Role> roles;
 
-    @Column(nullable = false)
-    private String  name;
 
-    @Column(nullable = false,unique = true)
-    private String email;
-    @JsonIgnore
-    @Column(nullable = false)
-    private String password;
+
 
     @JsonIgnore
     @Override

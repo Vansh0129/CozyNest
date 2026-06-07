@@ -22,7 +22,7 @@ import java.util.Map;
 @RestController
 @RequestMapping(value="/auth")
 @EnableMethodSecurity(securedEnabled=true)
-public class AuthController {
+public class AuthController {           //Tested
     private final AuthServiceImpl authService;
 
     @PreAuthorize("hasRole('HOTEL_MANAGER')")

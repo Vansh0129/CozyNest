@@ -7,17 +7,15 @@ import ConzyNestapp.com.CozyNest.Dto.Request.BookingRequest;
 import ConzyNestapp.com.CozyNest.Entity.*;
 import ConzyNestapp.com.CozyNest.Entity.Enums.BookingStatus;
 import ConzyNestapp.com.CozyNest.Exception.ResourceNotFoundException;
+import ConzyNestapp.com.CozyNest.Exception.UnAuthorisedException;
 import ConzyNestapp.com.CozyNest.Repository.*;
 import ConzyNestapp.com.CozyNest.Service.BookingService;
-import ConzyNestapp.com.CozyNest.Exception.UnAuthorisedException;
 import ConzyNestapp.com.CozyNest.Service.PaymentService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Refund;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.RefundCreateParams;
 import lombok.RequiredArgsConstructor;
-
-
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +29,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static ConzyNestapp.com.CozyNest.Utils.AppUtils.getUser;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -116,7 +116,8 @@ public class BookingServiceImpl implements BookingService {
 
 
         BookingEntity booking=bookingRepository.findById(booking_id).orElseThrow(()->new ResourceNotFoundException("Invalid Booking Id : "+booking_id));
-        UserEntity currentUser=(UserEntity)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserEntity  currentUser=getUser();
+
 
         if(!booking.getUser_Id().getName().equals(currentUser.getName()) || !booking.getUser_Id().getEmail().equals(currentUser.getEmail())) throw new UnAuthorisedException("Booking does not belong to this User !");
 
@@ -140,7 +141,8 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public String paymentInit(Long booking_id) {
         BookingEntity booking=bookingRepository.findById(booking_id).orElseThrow(()->new ResourceNotFoundException("Invalid Booking Id : "+booking_id));
-        UserEntity currentUser=(UserEntity)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserEntity currentUser= getUser();
+
 
         if(!booking.getUser_Id().getEmail().equals(currentUser.getEmail())) throw new UnAuthorisedException("Booking does not belong to this User !");
         if(booking.getBookingStatus()!=BookingStatus.RESERVED) throw new IllegalArgumentException("Booking is not under RESERVED state ,cannot do Payment !");
@@ -161,7 +163,7 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public void paymentRefund(Long booking_id){
         BookingEntity booking=bookingRepository.findById(booking_id).orElseThrow(()->new ResourceNotFoundException("Invalid Booking Id : "+booking_id));
-        UserEntity currentUser=(UserEntity)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserEntity currentUser=getUser();
 
         if(!booking.getUser_Id().getEmail().equals(currentUser.getEmail())) throw new UnAuthorisedException("Booking does not belong to this User !");
         if(booking.getBookingStatus()!=BookingStatus.CONFIRMED) throw new IllegalArgumentException("Booking is not under CONFIRMED state ,cannot hit refund !");

@@ -4,8 +4,6 @@ import ConzyNestapp.com.CozyNest.Entity.HotelEntity;
 import ConzyNestapp.com.CozyNest.Entity.InventoryEntity;
 import ConzyNestapp.com.CozyNest.Entity.RoomEntity;
 import jakarta.persistence.LockModeType;
-
-import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,11 +13,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 public interface InventoryRepository extends JpaRepository<InventoryEntity,Long> {
-    int deleteByDateAfterAndRoomId(LocalDate date, RoomEntity room);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    int deleteAllByRoomId( RoomEntity room);
 
     @Query("""
       SELECT DISTINCT i.hotelId FROM InventoryEntity i
@@ -66,7 +68,7 @@ public interface InventoryRepository extends JpaRepository<InventoryEntity,Long>
       WHERE i.roomId=:roomId
       AND i.date BETWEEN :startDate AND :endDate
       AND i.closed=false
-      AND (i.totalCount-i.bookedCount-i.reservedCount>= :roomCount)
+      AND (i.totalCount-i.bookedCount>= :roomCount)
       AND (i.reservedCount>=:roomCount)
     """)
     void ConfirmBooking(@Param("roomId") RoomEntity roomId,
@@ -98,10 +100,32 @@ public interface InventoryRepository extends JpaRepository<InventoryEntity,Long>
       WHERE i.roomId=:roomId
       AND i.date BETWEEN :startDate AND :endDate
       AND i.closed=false
-      AND (i.totalCount-i.bookedCount>= :roomCount)
+      AND (i.totalCount>= :roomCount)
     """)
     void refundBooking(@Param("roomId") RoomEntity roomId,
                        @Param("startDate") LocalDate startDate,
                        @Param("endDate") LocalDate endDate,
                        @Param("roomCount") long roomCount);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<InventoryEntity> findAllByRoomId(RoomEntity room);
+
+    List<InventoryEntity> findAllByRoomIdOrderByDate(RoomEntity roomId);
+
+
+    @Modifying
+    @Query("""
+      Update InventoryEntity i
+          Set i.surgeFactor= :surgeFactor
+      WHERE i.roomId=:roomId
+      AND i.date BETWEEN :startDate AND :endDate
+      AND i.closed=false
+    """)
+    void findAndUpdateSR(@Param("roomId") RoomEntity roomId,
+                         @Param("startDate") LocalDate startDate,
+                         @Param("endDate") LocalDate endDate,
+                         @Param("surgeFactor") BigDecimal surgeFactor
+    );
+
+    void deleteAllByHotelId(HotelEntity hotelId);
 }

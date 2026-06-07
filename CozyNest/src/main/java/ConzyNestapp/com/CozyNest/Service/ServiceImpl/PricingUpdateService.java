@@ -102,7 +102,7 @@ public class PricingUpdateService {
     private void updateInventoryPrice(List<InventoryEntity> inventoryList) {
         inventoryList.forEach(inventory -> {
             BigDecimal price =pricingService.calculateDynamicPricing(inventory);
-            inventory.setPrice(price);          //TODO:this can repetadely increse the calculated price for same event so need set BAse price entity and price differently! at first time both will be same
+            inventory.setPrice(price);
 
         });
         inventoryRepository.saveAll(inventoryList);

@@ -5,21 +5,21 @@ import ConzyNestapp.com.CozyNest.Entity.HotelEntity;
 import ConzyNestapp.com.CozyNest.Entity.RoomEntity;
 import ConzyNestapp.com.CozyNest.Entity.UserEntity;
 import ConzyNestapp.com.CozyNest.Exception.ResourceNotFoundException;
+import ConzyNestapp.com.CozyNest.Exception.UnAuthorisedException;
 import ConzyNestapp.com.CozyNest.Repository.HotelRepository;
 import ConzyNestapp.com.CozyNest.Repository.RoomRepository;
 import ConzyNestapp.com.CozyNest.Service.InventoryService;
 import ConzyNestapp.com.CozyNest.Service.RoomService;
-import ConzyNestapp.com.CozyNest.Exception.UnAuthorisedException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
+
+import static ConzyNestapp.com.CozyNest.Utils.AppUtils.getUser;
 
 @Service
 @RequiredArgsConstructor
@@ -51,10 +51,12 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
+    @Transactional
     public RoomDto createRoomForHotel(Long hotelId, RoomDto room) {
         HotelEntity hotelEntity=hotelRepository.findById(hotelId)
                 .orElseThrow(()-> new ResourceNotFoundException("Cannot find hotel with Id "+hotelId));
-        UserEntity user=(UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserEntity user=getUser();
+
         if(!hotelEntity.getOwner().equals(user.getUsername())) throw new UnAuthorisedException("The user does not Own this hotel !");
 
         RoomEntity roomEntity=modelMapper.map(room,RoomEntity.class);
@@ -71,15 +73,16 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     @Transactional
-    public RoomDto updateRoomDetails( Long roomId, Map<String,String> updateSource) {
+    public RoomDto updateRoomDetails( Long roomId,RoomDto updateSource) {
         log.info("Creating changes for hotel Room id {}",roomId);
         RoomEntity room=roomRepository.findById(roomId)
                         .orElseThrow(()->new ResourceNotFoundException(" No room with id "+roomId));
-        UserEntity user=(UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserEntity user=getUser();
         if(!room.getHotelEntity().getOwner().equals(user.getUsername())) throw new UnAuthorisedException("The user does not Own this hotel !");
-
+        if(updateSource.getBasePrice()!=null) inventoryService.updateInventoryForRoom(room,updateSource.getBasePrice());
         modelMapper.map(updateSource,room);
         log.info("new Entity \n {}",room);
+        room.setId(roomId);
         roomRepository.save(room);
 
         return modelMapper.map(room,RoomDto.class);
@@ -88,17 +91,18 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
+    @Transactional
     public Boolean deleteRoomById( Long roomid) {
 
         RoomEntity roomEntity=roomRepository
                 .findById(roomid)
                 .orElseThrow(()->new ResourceNotFoundException("Cannot find the Room with id "+roomid));
-        UserEntity user=(UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserEntity user=getUser();
         if(!roomEntity.getHotelEntity().getOwner().equals(user.getUsername())) throw new UnAuthorisedException("The user does not Own this hotel !");
-
 
         inventoryService.deleteAllInventoryForRoom(roomEntity);
         roomRepository.delete(roomEntity);
+
         return  true;
 
     }

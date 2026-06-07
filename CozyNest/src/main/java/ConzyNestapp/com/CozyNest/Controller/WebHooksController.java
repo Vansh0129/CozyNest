@@ -20,7 +20,7 @@ public class WebHooksController {
     @Value("${stripe.webhooks.key}")
     private  String webhookKey;     //Basics:-final key String cannot be reassigned.
 
-    @PostMapping(value = "/payment")
+    @PostMapping(value = "/payment")            //tested!
     public ResponseEntity<Void> capturePayment(@RequestBody String payload,@RequestHeader("Stripe-Signature") String header) throws SignatureVerificationException {
         log.info("Booking Payment event accured");
         try{

@@ -19,25 +19,25 @@ import java.util.Map;
 public class HotelBookingController {           //booking related api's
     private final BookingService bookingService;
 
-    @PostMapping("/init")
+    @PostMapping("/init")           //tested
     public ResponseEntity<BookingDto> initiateBooking(@RequestBody BookingRequest bookingRequest){
        return ResponseEntity.ok( bookingService.initiateBooking(bookingRequest));
 
     }
-    @PostMapping("/{bookingid}/Guest")
+    @PostMapping("/{bookingid}/Guest")        //tested
     public ResponseEntity<BookingDto> addGuest(@PathVariable Long bookingid, @RequestBody List<GuestDto> guestDtos){
         return ResponseEntity.ok( bookingService.addGuest(bookingid,guestDtos));
 
     }
 
-    @PostMapping("/{bookingid}/payment")
+    @PostMapping("/{bookingid}/payment")        //tested
     public ResponseEntity<Map> paymentInit(@PathVariable Long bookingid){   //only need the booking id.,And response only get the session url
         String SessionUrl=bookingService.paymentInit(bookingid);
         return ResponseEntity.ok(Map.of("sessionUrl",SessionUrl) );
 
     }
 
-    @PostMapping("/{bookingid}/refund")
+    @PostMapping("/{bookingid}/refund")       //tested
     public ResponseEntity<Void> paymentRefund(@PathVariable Long bookingid) throws StripeException {   //only need the booking id.,And response only get the session url
         bookingService.paymentRefund(bookingid);
         return ResponseEntity.noContent().build();

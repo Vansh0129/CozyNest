@@ -9,7 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 //@SpringBootTest
 class CozyNestApplicationTests {
 	@Autowired
-			AuthServiceImpl authService;
+	AuthServiceImpl authService;
 
 //"email":"vanshlute@gmail.com",
 //    "password": "vansh@123"
